@@ -1,46 +1,75 @@
 package com.evalflow.eval_flow.controller;
 
 
-import com.evalflow.eval_flow.model.Evaluation;
-import com.evalflow.eval_flow.service.EvaluationService;
+import com.evalflow.eval_flow.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
-import java.util.Map;
 
-@RestController
-@RequestMapping("/admin/report")
+@Controller
+@RequestMapping("/admin/reports")
 public class ReportController {
 
     @Autowired
-    private EvaluationService evaluationService;
+    private ReportService reportService;
 
-    @GetMapping("/average/{techId}")
-    public Map<Integer,Double> getRoundAverage(@PathVariable Long techId){
-        return evaluationService.getAvgScorePerRound(techId);
+    @GetMapping("/api/participants")
+    @ResponseBody
+    public List<ReportService.ParticipantReport> getParticipantReport(
+            @RequestParam Long batchId,
+            @RequestParam Long technologyId) {
+        return reportService.getParticipantScoresReport(batchId, technologyId);
     }
 
-    @GetMapping("/batch/{batchId}")
-    public List<Evaluation> getBatchData(@PathVariable Long batchId){
-        return evaluationService.getBatchEvaluations(batchId);
+    @GetMapping("/api/rounds")
+    @ResponseBody
+    public List<ReportService.RoundReport> getRoundReport(@RequestParam Long technologyId) {
+        return reportService.getRoundAverageReport(technologyId);
     }
 
-    @GetMapping("/download-csv/{batchId}")
-    public ResponseEntity<String> downloadCSV(@PathVariable Long batchId){
-        String csvData = evaluationService.generateCsvContent(batchId);
+    @GetMapping("/api/export/pdf")
+    public ResponseEntity<byte[]> exportPdf(
+            @RequestParam Long batchId,
+            @RequestParam Long technologyId) {
+        try {
+            byte[] pdfBytes = reportService.generatePdfReport(batchId, technologyId);
 
-        String filename= "Batch_"   + batchId +"_Report.csv";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+filename)
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csvData);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "evaluation-report.pdf");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
+    @GetMapping("/api/export/csv")
+    public ResponseEntity<String> exportCsv(
+            @RequestParam Long batchId,
+            @RequestParam Long technologyId) {
+        try {
+            String csv = reportService.generateCsvReport(batchId, technologyId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDispositionFormData("attachment", "evaluation-report.csv");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(csv);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
