@@ -1,26 +1,22 @@
-package com.evalflow.eval_flow.model;
+package com.evalflow.eval_flow.entity;
+
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "technologies")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Technology {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @Column(unique = true)
     private String name;
-
-    private String description;
-
-    private boolean active = true;
 }

@@ -1,39 +1,29 @@
-package com.evalflow.eval_flow.model;
+package com.evalflow.eval_flow.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     private String name;
 
-    @Email
-    @NotBlank
     @Column(unique = true)
     private String email;
 
-    @NotBlank
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private boolean active = true;
-
-    public enum Role {
-        ADMIN, EVALUATOR
-    }
 }
