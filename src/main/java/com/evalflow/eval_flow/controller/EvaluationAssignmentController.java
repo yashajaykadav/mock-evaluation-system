@@ -3,6 +3,7 @@ package com.evalflow.eval_flow.controller;
 import com.evalflow.eval_flow.entity.EvaluationAssignment;
 import com.evalflow.eval_flow.service.EvaluationAssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,4 +29,11 @@ public class EvaluationAssignmentController {
     public List<EvaluationAssignment> getEvaluatorAssignments(@PathVariable Long id) {
         return assignmentService.getAssignmentsForEvaluator(id);
     }
+
+    @GetMapping("/pending/{evaluatorId}")
+    public ResponseEntity<List<EvaluationAssignment>> getPendingAssignments(@PathVariable Long evaluatorId) {
+        return ResponseEntity.ok(assignmentService.getAssignmentsForEvaluator(evaluatorId));
+    }
+
+
 }

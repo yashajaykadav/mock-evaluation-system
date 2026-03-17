@@ -26,4 +26,8 @@ public class EvaluationAssignmentService {
         return assignmentRepository.findByEvaluatorId(evaluatorId);
     }
 
+    public List<EvaluationAssignment> getPendingAssignments(Long evaluatorId){
+        return assignmentRepository.findByEvaluator_IdAndStatus(evaluatorId,"ASSIGNED");
+    }
+
 }

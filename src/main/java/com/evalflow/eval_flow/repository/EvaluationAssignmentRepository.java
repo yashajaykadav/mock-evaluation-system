@@ -8,5 +8,6 @@ import java.util.List;
 public interface EvaluationAssignmentRepository extends JpaRepository<EvaluationAssignment, Long> {
 
     List<EvaluationAssignment> findByEvaluatorId(Long evaluatorId);
+    List<EvaluationAssignment> findByEvaluator_IdAndStatus(Long evaluatorId, String status);
 
 }

@@ -27,6 +27,8 @@ public class Evaluation {
     @Column(length = 2000)
     private String feedback;
 
+    private String result;
+
     private LocalDateTime submittedAt;
 
 }
