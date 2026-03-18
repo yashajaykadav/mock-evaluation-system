@@ -591,22 +591,45 @@ async function loadParticipants() {
     }
 }
 
-function editParticipant(participantId) {
+async function editParticipant(participantId) {
     const participant = participants.find(p => p.id === participantId);
     if (!participant) return;
 
-    // Populate dropdowns
-    populateParticipantDropdowns();
+    try {
+        // Load batches if not already loaded
+        if (batches.length === 0) {
+            const batchRes = await apiCall('/admin/api/batches');
+            if (batchRes && batchRes.ok) {
+                batches = await batchRes.json();
+            }
+        }
 
-    document.getElementById('participantId').value = participant.id;
-    document.getElementById('participantName').value = participant.name || '';
-    document.getElementById('participantEmail').value = participant.email || '';
-    document.getElementById('participantPhone').value = participant.phone || '';
-    document.getElementById('participantBatch').value = participant.batch?.id || '';
-    document.getElementById('participantTechnology').value = participant.technology?.id || '';
-    document.getElementById('participantModalTitle').textContent = 'Edit Participant';
+        // Load technologies if not already loaded
+        if (technologies.length === 0) {
+            const techRes = await apiCall('/admin/api/technologies');
+            if (techRes && techRes.ok) {
+                technologies = await techRes.json();
+            }
+        }
 
-    showModal('participantModal');
+        // Populate dropdowns
+        populateParticipantDropdowns();
+
+        // Fill form with participant data
+        document.getElementById('participantId').value = participant.id;
+        document.getElementById('participantName').value = participant.name || '';
+        document.getElementById('participantEmail').value = participant.email || '';
+        document.getElementById('participantPhone').value = participant.phone || '';
+        document.getElementById('participantBatch').value = participant.batch?.id || '';
+        document.getElementById('participantTechnology').value = participant.technology?.id || '';
+        document.getElementById('participantModalTitle').textContent = 'Edit Participant';
+
+        showModal('participantModal');
+
+    } catch (error) {
+        console.error('Error loading data for edit:', error);
+        showNotification('Error loading data', 'error');
+    }
 }
 
 async function deleteParticipant(participantId) {
@@ -633,15 +656,37 @@ function populateParticipantDropdowns() {
     const batchSelect = document.getElementById('participantBatch');
     const techSelect = document.getElementById('participantTechnology');
 
+    // Populate Batch dropdown
     batchSelect.innerHTML = '<option value="">Select Batch</option>';
-    batches.forEach(batch => {
-        batchSelect.innerHTML += `<option value="${batch.id}">${batch.name}</option>`;
-    });
+    if (batches.length === 0) {
+        batchSelect.innerHTML += '<option value="" disabled>No batches available</option>';
+    } else {
+        batches.forEach(batch => {
+            if (batch.active !== false) { // Only show active batches
+                batchSelect.innerHTML += `<option value="${batch.id}">${escapeHtml(batch.name)}</option>`;
+            }
+        });
+    }
 
+    // Populate Technology dropdown
     techSelect.innerHTML = '<option value="">Select Technology</option>';
-    technologies.forEach(tech => {
-        techSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
-    });
+    if (technologies.length === 0) {
+        techSelect.innerHTML += '<option value="" disabled>No technologies available</option>';
+    } else {
+        technologies.forEach(tech => {
+            if (tech.active !== false) { // Only show active technologies
+                techSelect.innerHTML += `<option value="${tech.id}">${escapeHtml(tech.name)}</option>`;
+            }
+        });
+    }
+}
+
+// Helper function to prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 document.getElementById('participantForm').addEventListener('submit', async (e) => {
@@ -683,35 +728,77 @@ document.getElementById('participantForm').addEventListener('submit', async (e) 
 });
 
 // ==================== ROUNDS ====================
-
 async function loadRoundsSection() {
-    // Load technologies for filter
-    if (technologies.length === 0) {
-        const techRes = await apiCall('/admin/api/technologies');
-        if (techRes && techRes.ok) technologies = await techRes.json();
+    try {
+        // Load technologies if not already loaded
+        if (technologies.length === 0) {
+            const techRes = await apiCall('/admin/api/technologies');
+            if (techRes && techRes.ok) {
+                technologies = await techRes.json();
+            }
+        }
+
+        // Load batches if not already loaded
+        if (batches.length === 0) {
+            const batchRes = await apiCall('/admin/api/batches');
+            if (batchRes && batchRes.ok) {
+                batches = await batchRes.json();
+            }
+        }
+
+        // Populate filter dropdowns
+        populateRoundFilterDropdowns();
+
+        // Load rounds
+        await loadRounds();
+
+    } catch (error) {
+        console.error('Error loading rounds section:', error);
+        showNotification('Error loading rounds section', 'error');
+    }
+}
+
+function populateRoundFilterDropdowns() {
+    // Populate Batch filter dropdown
+    const batchSelect = document.getElementById('roundFilterBatch');
+    if (batchSelect) {
+        batchSelect.innerHTML = '<option value="">All Batches</option>';
+        batches.forEach(batch => {
+            if (batch.active !== false) {
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.name}</option>`;
+            }
+        });
     }
 
-    const techSelect = document.getElementById('roundTechnology');
+    // Populate Technology filter dropdown
+    const techSelect = document.getElementById('roundFilterTechnology');
     if (techSelect) {
-        techSelect.innerHTML = '<option value="">Select Technology</option>';
+        techSelect.innerHTML = '<option value="">All Technologies</option>';
         technologies.forEach(tech => {
-            techSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
+            if (tech.active !== false) {
+                techSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
+            }
         });
     }
 }
 
+
 async function loadRounds() {
-    const techId = document.getElementById('roundTechnology')?.value;
+    const batchId = document.getElementById('roundFilterBatch')?.value;
+    const techId = document.getElementById('roundFilterTechnology')?.value;
 
     const tbody = document.querySelector('#roundsTable tbody');
-
-    if (!techId) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Select a technology to view rounds</td></tr>';
-        return;
-    }
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
 
     try {
-        const response = await apiCall(`/admin/api/rounds?technologyId=${techId}`);
+        // Build query params
+        let queryParams = [];
+        if (batchId) queryParams.push(`batchId=${batchId}`);
+        if (techId) queryParams.push(`technologyId=${techId}`);
+
+        const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+
+        const response = await apiCall(`/admin/api/rounds${queryString}`);
 
         if (!response || !response.ok) {
             throw new Error('Failed to load rounds');
@@ -726,24 +813,69 @@ async function loadRounds() {
         }
 
         rounds.forEach(round => {
-            const row = `
-                <tr>
-                    <td>${round.batch?.name || '-'}</td>
-                    <td>${round.technology?.name || '-'}</td>
-                    <td>${round.roundNumber || round.roundOrder || '-'}</td>
-                    <td>${round.roundName || '-'}</td>
-                    <td>
-                        <button class="btn btn-small btn-danger" onclick="deleteRound(${round.id})">Delete</button>
-                    </td>
-                </tr>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${round.batch?.name || '-'}</td>
+                <td>${round.technology?.name || '-'}</td>
+                <td>${round.roundNumber || round.roundOrder || '-'}</td>
+                <td>${round.roundName || '-'}</td>
+                <td>
+                    <button class="btn btn-small btn-secondary" onclick="editRound(${round.id})">Edit</button>
+                    <button class="btn btn-small btn-danger" onclick="deleteRound(${round.id})">Delete</button>
+                </td>
             `;
-            tbody.innerHTML += row;
+            tbody.appendChild(row);
         });
     } catch (error) {
         console.error('Error loading rounds:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error loading rounds</td></tr>';
         showNotification('Error loading rounds', 'error');
     }
 }
+
+function clearRoundFilters() {
+    document.getElementById('roundFilterBatch').value = '';
+    document.getElementById('roundFilterTechnology').value = '';
+    loadRounds();
+}
+
+async function editRound(roundId) {
+    const round = rounds.find(r => r.id === roundId);
+    if (!round) return;
+
+    try {
+        // Load data if needed
+        if (batches.length === 0) {
+            const batchRes = await apiCall('/admin/api/batches');
+            if (batchRes && batchRes.ok) batches = await batchRes.json();
+        }
+        if (technologies.length === 0) {
+            const techRes = await apiCall('/admin/api/technologies');
+            if (techRes && techRes.ok) technologies = await techRes.json();
+        }
+
+        // Populate dropdowns
+        populateRoundModalDropdowns();
+
+        // Fill form
+        if (document.getElementById('roundId')) {
+            document.getElementById('roundId').value = round.id;
+        }
+        document.getElementById('roundModalBatch').value = round.batch?.id || '';
+        document.getElementById('roundModalTechnology').value = round.technology?.id || '';
+        document.getElementById('roundNumber').value = round.roundNumber || round.roundOrder || '';
+        document.getElementById('roundName').value = round.roundName || '';
+        document.getElementById('roundDescription').value = round.description || '';
+        document.getElementById('roundModalTitle').textContent = 'Edit Round';
+
+        showModal('roundModal');
+
+    } catch (error) {
+        console.error('Error loading round data:', error);
+        showNotification('Error loading round data', 'error');
+    }
+}
+
 
 async function deleteRound(roundId) {
     if (!confirm('Are you sure you want to delete this round?')) return;
@@ -765,36 +897,210 @@ async function deleteRound(roundId) {
     }
 }
 
+// Update Round Form Submission
 document.getElementById('roundForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const roundId = document.getElementById('roundId')?.value;
+    const batchId = document.getElementById('roundModalBatch').value;
+    const technologyId = document.getElementById('roundModalTechnology').value;
+
+    // Validation
+    if (!batchId) {
+        showNotification('Please select a batch', 'error');
+        return;
+    }
+    if (!technologyId) {
+        showNotification('Please select a technology', 'error');
+        return;
+    }
+
     const roundData = {
-        technology: { id: parseInt(document.getElementById('roundTechnology').value) },
+        batch: { id: parseInt(batchId) },
+        technology: { id: parseInt(technologyId) },
         roundNumber: parseInt(document.getElementById('roundNumber').value),
         roundName: document.getElementById('roundName').value,
         description: document.getElementById('roundDescription').value
     };
 
     try {
-        const response = await apiCall('/admin/api/rounds', {
-            method: 'POST',
+        const url = roundId ? `/admin/api/rounds/${roundId}` : '/admin/api/rounds';
+        const method = roundId ? 'PUT' : 'POST';
+
+        const response = await apiCall(url, {
+            method: method,
             body: JSON.stringify(roundData)
         });
 
         if (response && response.ok) {
-            showNotification('Round created successfully', 'success');
+            showNotification(`Round ${roundId ? 'updated' : 'created'} successfully`, 'success');
             hideModal('roundModal');
             loadRounds();
             document.getElementById('roundForm').reset();
         } else {
             const error = await response.json();
-            showNotification(error.message || error.error || 'Error creating round', 'error');
+            showNotification(error.message || error.error || 'Error saving round', 'error');
         }
     } catch (error) {
-        console.error('Error creating round:', error);
-        showNotification('Error creating round', 'error');
+        console.error('Error saving round:', error);
+        showNotification('Error saving round', 'error');
     }
 });
+
+
+// ==================== PARTICIPANTS ====================
+
+// Participant Modal
+async function showAddParticipantModal() {
+    try {
+        // Load batches if not already loaded
+        if (batches.length === 0) {
+            const batchRes = await apiCall('/admin/api/batches');
+            if (batchRes && batchRes.ok) {
+                batches = await batchRes.json();
+            }
+        }
+
+        // Load technologies if not already loaded
+        if (technologies.length === 0) {
+            const techRes = await apiCall('/admin/api/technologies');
+            if (techRes && techRes.ok) {
+                technologies = await techRes.json();
+            }
+        }
+
+        // Populate dropdowns
+        populateParticipantDropdowns();
+
+        // Reset form
+        document.getElementById('participantForm').reset();
+        document.getElementById('participantId').value = '';
+        document.getElementById('participantModalTitle').textContent = 'Add Participant';
+
+        showModal('participantModal');
+
+    } catch (error) {
+        console.error('Error loading data for participant modal:', error);
+        showNotification('Error loading data', 'error');
+    }
+}
+// User Modal
+function showAddUserModal() {
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('userPassword').required = true;
+    document.getElementById('userModalTitle').textContent = 'Add User';
+    showModal('userModal');
+}
+
+// Batch Modal
+function showAddBatchModal() {
+    document.getElementById('batchForm').reset();
+    document.getElementById('batchId').value = '';
+    document.getElementById('batchModalTitle').textContent = 'Add Batch';
+    showModal('batchModal');
+}
+
+// Technology Modal
+function showAddTechnologyModal() {
+    document.getElementById('technologyForm').reset();
+    document.getElementById('technologyId').value = '';
+    document.getElementById('technologyModalTitle').textContent = 'Add Technology';
+    showModal('technologyModal');
+}
+
+
+// Round Modal - NEW
+async function showAddRoundModal() {
+    try {
+        // Load batches if not already loaded
+        if (batches.length === 0) {
+            const batchRes = await apiCall('/admin/api/batches');
+            if (batchRes && batchRes.ok) {
+                batches = await batchRes.json();
+            }
+        }
+
+        // Load technologies if not already loaded
+        if (technologies.length === 0) {
+            const techRes = await apiCall('/admin/api/technologies');
+            if (techRes && techRes.ok) {
+                technologies = await techRes.json();
+            }
+        }
+
+        // Populate dropdowns in modal
+        populateRoundModalDropdowns();
+
+        // Reset form
+        document.getElementById('roundForm').reset();
+        if (document.getElementById('roundId')) {
+            document.getElementById('roundId').value = '';
+        }
+        document.getElementById('roundModalTitle').textContent = 'Add Round';
+
+        showModal('roundModal');
+
+    } catch (error) {
+        console.error('Error loading data for round modal:', error);
+        showNotification('Error loading data', 'error');
+    }
+}
+
+// Populate Round Modal Dropdowns - NEW
+function populateRoundModalDropdowns() {
+    const batchSelect = document.getElementById('roundModalBatch');
+    const techSelect = document.getElementById('roundModalTechnology');
+
+    // Populate Batch dropdown
+    batchSelect.innerHTML = '<option value="">Select Batch</option>';
+    if (batches.length === 0) {
+        batchSelect.innerHTML += '<option value="" disabled>No batches available</option>';
+    } else {
+        batches.forEach(batch => {
+            if (batch.active !== false) {
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.name}</option>`;
+            }
+        });
+    }
+
+    // Populate Technology dropdown
+    techSelect.innerHTML = '<option value="">Select Technology</option>';
+    if (technologies.length === 0) {
+        techSelect.innerHTML += '<option value="" disabled>No technologies available</option>';
+    } else {
+        technologies.forEach(tech => {
+            if (tech.active !== false) {
+                techSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
+            }
+        });
+    }
+}
+
+
+function populateRoundDropdowns() {
+    // Populate Technology dropdown in modal
+    const modalTechSelect = document.getElementById('roundModalTechnology');
+    if (modalTechSelect) {
+        modalTechSelect.innerHTML = '<option value="">Select Technology</option>';
+        technologies.forEach(tech => {
+            if (tech.active !== false) {
+                modalTechSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
+            }
+        });
+    }
+
+    // Populate Batch dropdown in modal
+    const modalBatchSelect = document.getElementById('roundModalBatch');
+    if (modalBatchSelect) {
+        modalBatchSelect.innerHTML = '<option value="">Select Batch</option>';
+        batches.forEach(batch => {
+            if (batch.active !== false) {
+                modalBatchSelect.innerHTML += `<option value="${batch.id}">${batch.name}</option>`;
+            }
+        });
+    }
+}
 
 // ==================== ASSIGNMENTS ====================
 
@@ -905,6 +1211,47 @@ document.getElementById('assignmentForm').addEventListener('submit', async (e) =
     }
 });
 
+function populateParticipantFilters() {
+    const batchSelect = document.getElementById('filterParticipantBatch');
+    const techSelect = document.getElementById('filterParticipantTechnology');
+
+    if (batchSelect) {
+        batchSelect.innerHTML = '<option value="">All Batches</option>';
+        batches.forEach(batch => {
+            batchSelect.innerHTML += `<option value="${batch.id}">${batch.name}</option>`;
+        });
+    }
+
+    if (techSelect) {
+        techSelect.innerHTML = '<option value="">All Technologies</option>';
+        technologies.forEach(tech => {
+            techSelect.innerHTML += `<option value="${tech.id}">${tech.name}</option>`;
+        });
+    }
+}
+
+
+function filterParticipants() {
+    // Re-load participants with filters
+    loadParticipants();
+}
+
+function clearParticipantFilters() {
+    document.getElementById('filterParticipantBatch').value = '';
+    document.getElementById('filterParticipantTechnology').value = '';
+    loadParticipants();
+}
+
+function filterAssignments() {
+    loadAssignments();
+}
+
+function clearAssignmentFilters() {
+    document.getElementById('filterAssignmentStatus').value = '';
+    document.getElementById('filterAssignmentBatch').value = '';
+    loadAssignments();
+}
+
 // ==================== REPORTS ====================
 
 async function loadReportsSection() {
@@ -998,7 +1345,7 @@ function exportPDF() {
     showNotification('PDF export not available. Please use CSV export.', 'warning');
 }
 
-function exportCSV() {
+async function exportCSV() {
     const batchId = document.getElementById('reportBatch').value;
     const techId = document.getElementById('reportTechnology').value;
 
@@ -1007,10 +1354,27 @@ function exportCSV() {
         return;
     }
 
-    // Direct download with token in URL (alternative approach)
-    window.location.href = `/admin/api/reports/export/csv?batchId=${batchId}&technologyId=${techId}`;
-}
+    try {
+        const response = await apiCall(
+            `/admin/api/reports/export/csv?batchId=${batchId}&technologyId=${techId}`
+        );
 
+        if (response && response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report_${batchId}_${techId}_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        showNotification('Error exporting CSV', 'error');
+    }
+}
 // ==================== UTILITIES ====================
 
 function formatDate(dateStr) {

@@ -9,14 +9,15 @@
 // import java.util.Map;
 
 // @RestController
-// @RequestMapping("/admin/dashboard")
+// @RequestMapping("/admin/api") // ✅ Changed from /admin/dashboard
 // @RequiredArgsConstructor
 // public class DashboardController {
 
-//     private final DashboardService dashboardService;
+// private final DashboardService dashboardService;
 
-//     @GetMapping("/summary")
-//     public Map<String, Object> getDashboardSummary() {
-//         return dashboardService.getSummaryStats();
-//     }
+// @GetMapping("/dashboard/summary") // ✅ Full path:
+// /admin/api/dashboard/summary
+// public Map<String, Object> getDashboardSummary() {
+// return dashboardService.getSummaryStats();
+// }
 // }

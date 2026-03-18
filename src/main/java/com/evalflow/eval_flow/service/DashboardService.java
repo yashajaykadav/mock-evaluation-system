@@ -25,13 +25,13 @@ public class DashboardService {
     public Map<String, Object> getSummaryStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        stats.put("totalBatches", batchRepository.count());
-        stats.put("totalParticipants", participantRepository.count());
-        stats.put("totalTechnologies", technologyRepository.count());
-        stats.put("totalEvaluators", userRepository.findByRole(Role.EVALUATOR).size());
-
-        long completedEvaluations = evaluationRepository.findAll().size();
-        stats.put("completedEvaluations", completedEvaluations);
+        // ✅ Keys that match JavaScript expectations
+        stats.put("batches", batchRepository.count());
+        stats.put("activeBatches", batchRepository.count()); // Add active filter if needed
+        stats.put("participants", participantRepository.count());
+        stats.put("technologies", technologyRepository.count());
+        stats.put("evaluators", userRepository.findByRole(Role.EVALUATOR).size());
+        stats.put("completedEvaluations", evaluationRepository.findAll().size());
 
         return stats;
     }

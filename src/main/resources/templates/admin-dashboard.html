@@ -1,428 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - EvalFlow</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
+
 <body>
-<div class="dashboard">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <h2>📋 EvalFlow</h2>
-            <span>Admin Panel</span>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>📋 EvalFlow</h2>
+                <span>Admin Panel</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" data-section="dashboard">🏠 Dashboard</a></li>
+                <li><a href="#" data-section="users">👥 Users</a></li>
+                <li><a href="#" data-section="batches">📚 Batches</a></li>
+                <li><a href="#" data-section="technologies">💻 Technologies</a></li>
+                <li><a href="#" data-section="participants">👨‍🎓 Participants</a></li>
+                <li><a href="#" data-section="rounds">🔄 Rounds</a></li>
+                <li><a href="#" data-section="assignments">📝 Assignments</a></li>
+                <li><a href="#" data-section="reports">📊 Reports</a></li>
+                <li class="logout"><a href="#" id="logoutBtn">🚪 Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <span id="userName">Admin</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <h3 id="statBatches">0</h3>
+                            <p>Active Batches</p>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon">💻</div>
+                        <div class="stat-info">
+                            <h3 id="statTechnologies">0</h3>
+                            <p>Technologies</p>
+                        </div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon">👨‍🎓</div>
+                        <div class="stat-info">
+                            <h3 id="statParticipants">0</h3>
+                            <p>Participants</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3 id="statEvaluators">0</h3>
+                            <p>Evaluators</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users-section" class="content-section">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <button class="btn btn-primary" onclick="showAddUserModal()">+ Add User</button>
+                </div>
+                <div class="table-container">
+                    <table id="usersTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Batches Section -->
+            <section id="batches-section" class="content-section">
+                <div class="section-header">
+                    <h2>Batch Management</h2>
+                    <button class="btn btn-primary" onclick="showAddBatchModal()">+ Add Batch</button>
+                </div>
+                <div class="table-container">
+                    <table id="batchesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Technologies Section -->
+            <section id="technologies-section" class="content-section">
+                <div class="section-header">
+                    <h2>Technology Management</h2>
+                    <button class="btn btn-primary" onclick="showAddTechnologyModal()">+ Add Technology</button>
+                </div>
+                <div class="table-container">
+                    <table id="technologiesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Participants Section -->
+            <section id="participants-section" class="content-section">
+                <div class="section-header">
+                    <h2>Participant Management</h2>
+                    <button class="btn btn-primary" onclick="showAddParticipantModal()">+ Add Participant</button>
+                </div>
+                <!-- Participant Filters -->
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <select id="filterParticipantBatch" onchange="filterParticipants()">
+                            <option value="">All Batches</option>
+                        </select>
+                        <select id="filterParticipantTechnology" onchange="filterParticipants()">
+                            <option value="">All Technologies</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearParticipantFilters()">Clear Filters</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="participantsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Batch</th>
+                                <th>Technology</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Rounds Section - FIXED -->
+            <section id="rounds-section" class="content-section">
+                <div class="section-header">
+                    <h2>Evaluation Rounds</h2>
+                    <button class="btn btn-primary" onclick="showAddRoundModal()">+ Add Round</button>
+                </div>
+                <!-- Round Filters - ADDED -->
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <select id="roundFilterBatch" onchange="loadRounds()">
+                            <option value="">All Batches</option>
+                        </select>
+                        <select id="roundFilterTechnology" onchange="loadRounds()">
+                            <option value="">All Technologies</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearRoundFilters()">Clear Filters</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="roundsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Batch</th>
+                                <th>Technology</th>
+                                <th>Round #</th>
+                                <th>Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Assignments Section -->
+            <section id="assignments-section" class="content-section">
+                <div class="section-header">
+                    <h2>Evaluation Assignments</h2>
+                    <button class="btn btn-primary" onclick="showAssignmentModal()">+ Assign Evaluation</button>
+                </div>
+                <!-- Assignment Filters -->
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <select id="filterAssignmentStatus" onchange="filterAssignments()">
+                            <option value="">All Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="COMPLETED">Completed</option>
+                        </select>
+                        <select id="filterAssignmentBatch" onchange="filterAssignments()">
+                            <option value="">All Batches</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearAssignmentFilters()">Clear Filters</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="assignmentsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Evaluator</th>
+                                <th>Round</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports-section" class="content-section">
+                <div class="section-header">
+                    <h2>Reports</h2>
+                </div>
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <select id="reportBatch">
+                            <option value="">Select Batch</option>
+                        </select>
+                        <select id="reportTechnology">
+                            <option value="">Select Technology</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadReport()">Generate Report</button>
+                        <button class="btn btn-success" onclick="exportPDF()">📥 Export PDF</button>
+                        <button class="btn btn-success" onclick="exportCSV()">📥 Export CSV</button>
+                    </div>
+                </div>
+                <div id="reportContent"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Add User</h2>
+                <span class="close" onclick="hideModal('userModal')">&times;</span>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group">
+                    <label for="userName2">Name *</label>
+                    <input type="text" id="userName2" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email *</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Password</label>
+                    <input type="password" id="userPassword">
+                    <small class="form-hint">Leave blank to keep existing password (when editing)</small>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role *</label>
+                    <select id="userRole" required>
+                        <option value="">Select Role</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="EVALUATOR">Evaluator</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('userModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
-        <ul class="sidebar-menu">
-            <li><a href="#" class="active" data-section="dashboard">🏠 Dashboard</a></li>
-            <li><a href="#" data-section="users">👥 Users</a></li>
-            <li><a href="#" data-section="batches">📚 Batches</a></li>
-            <li><a href="#" data-section="technologies">💻 Technologies</a></li>
-            <li><a href="#" data-section="participants">👨‍🎓 Participants</a></li>
-            <li><a href="#" data-section="rounds">🔄 Rounds</a></li>
-            <li><a href="#" data-section="assignments">📝 Assignments</a></li>
-            <li><a href="#" data-section="reports">📊 Reports</a></li>
-            <li class="logout"><a href="#" id="logoutBtn">🚪 Logout</a></li>
-        </ul>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="top-bar">
-            <h1 id="pageTitle">Dashboard</h1>
-            <div class="user-info">
-                <span id="userName">Admin</span>
+    <!-- Batch Modal -->
+    <div id="batchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="batchModalTitle">Add Batch</h2>
+                <span class="close" onclick="hideModal('batchModal')">&times;</span>
             </div>
+            <form id="batchForm">
+                <input type="hidden" id="batchId">
+                <div class="form-group">
+                    <label for="batchName">Name *</label>
+                    <input type="text" id="batchName" required>
+                </div>
+                <div class="form-group">
+                    <label for="batchStartDate">Start Date *</label>
+                    <input type="date" id="batchStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="batchEndDate">End Date *</label>
+                    <input type="date" id="batchEndDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="batchDescription">Description</label>
+                    <textarea id="batchDescription" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('batchModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard-section" class="content-section active">
-            <div class="stats-grid">
-                <div class="stat-card blue">
-                    <div class="stat-icon">📚</div>
-                    <div class="stat-info">
-                        <h3 id="statBatches">0</h3>
-                        <p>Active Batches</p>
-                    </div>
+    <!-- Technology Modal -->
+    <div id="technologyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="technologyModalTitle">Add Technology</h2>
+                <span class="close" onclick="hideModal('technologyModal')">&times;</span>
+            </div>
+            <form id="technologyForm">
+                <input type="hidden" id="technologyId">
+                <div class="form-group">
+                    <label for="technologyName">Name *</label>
+                    <input type="text" id="technologyName" required>
                 </div>
-                <div class="stat-card green">
-                    <div class="stat-icon">💻</div>
-                    <div class="stat-info">
-                        <h3 id="statTechnologies">0</h3>
-                        <p>Technologies</p>
-                    </div>
+                <div class="form-group">
+                    <label for="technologyDescription">Description</label>
+                    <textarea id="technologyDescription" rows="3"></textarea>
                 </div>
-                <div class="stat-card purple">
-                    <div class="stat-icon">👨‍🎓</div>
-                    <div class="stat-info">
-                        <h3 id="statParticipants">0</h3>
-                        <p>Participants</p>
-                    </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="hideModal('technologyModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
-                <div class="stat-card orange">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-info">
-                        <h3 id="statEvaluators">0</h3>
-                        <p>Evaluators</p>
-                    </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Participant Modal -->
+    <div id="participantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="participantModalTitle">Add Participant</h2>
+                <span class="close" onclick="hideModal('participantModal')">&times;</span>
+            </div>
+            <form id="participantForm">
+                <input type="hidden" id="participantId">
+                <div class="form-group">
+                    <label for="participantName">Name *</label>
+                    <input type="text" id="participantName" required>
                 </div>
-            </div>
-        </section>
-
-        <!-- Users Section -->
-        <section id="users-section" class="content-section">
-            <div class="section-header">
-                <h2>User Management</h2>
-                <button class="btn btn-primary" onclick="showModal('userModal')">+ Add User</button>
-            </div>
-            <div class="table-container">
-                <table id="usersTable">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Batches Section -->
-        <section id="batches-section" class="content-section">
-            <div class="section-header">
-                <h2>Batch Management</h2>
-                <button class="btn btn-primary" onclick="showModal('batchModal')">+ Add Batch</button>
-            </div>
-            <div class="table-container">
-                <table id="batchesTable">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Technologies Section -->
-        <section id="technologies-section" class="content-section">
-            <div class="section-header">
-                <h2>Technology Management</h2>
-                <button class="btn btn-primary" onclick="showModal('technologyModal')">+ Add Technology</button>
-            </div>
-            <div class="table-container">
-                <table id="technologiesTable">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Participants Section -->
-        <section id="participants-section" class="content-section">
-            <div class="section-header">
-                <h2>Participant Management</h2>
-                <button class="btn btn-primary" onclick="showModal('participantModal')">+ Add Participant</button>
-            </div>
-            <div class="table-container">
-                <table id="participantsTable">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Batch</th>
-                        <th>Technology</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Rounds Section -->
-        <section id="rounds-section" class="content-section">
-            <div class="section-header">
-                <h2>Evaluation Rounds</h2>
-                <button class="btn btn-primary" onclick="showModal('roundModal')">+ Add Round</button>
-            </div>
-            <div class="table-container">
-                <table id="roundsTable">
-                    <thead>
-                    <tr>
-                        <th>Batch</th>
-                        <th>Technology</th>
-                        <th>Round #</th>
-                        <th>Name</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Assignments Section -->
-        <section id="assignments-section" class="content-section">
-            <div class="section-header">
-                <h2>Evaluation Assignments</h2>
-                <button class="btn btn-primary" onclick="showModal('assignmentModal')">+ Assign Evaluation</button>
-            </div>
-            <div class="table-container">
-                <table id="assignmentsTable">
-                    <thead>
-                    <tr>
-                        <th>Participant</th>
-                        <th>Evaluator</th>
-                        <th>Round</th>
-                        <th>Status</th>
-                        <th>Score</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Reports Section -->
-        <section id="reports-section" class="content-section">
-            <div class="section-header">
-                <h2>Reports</h2>
-            </div>
-            <div class="report-filters">
-                <div class="filter-row">
-                    <select id="reportBatch">
+                <div class="form-group">
+                    <label for="participantEmail">Email *</label>
+                    <input type="email" id="participantEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="participantPhone">Phone</label>
+                    <input type="tel" id="participantPhone">
+                </div>
+                <div class="form-group">
+                    <label for="participantBatch">Batch *</label>
+                    <select id="participantBatch" required>
                         <option value="">Select Batch</option>
                     </select>
-                    <select id="reportTechnology">
+                </div>
+                <div class="form-group">
+                    <label for="participantTechnology">Technology *</label>
+                    <select id="participantTechnology" required>
                         <option value="">Select Technology</option>
                     </select>
-                    <button class="btn btn-secondary" onclick="loadReport()">Generate Report</button>
-                    <button class="btn btn-success" onclick="exportPDF()">📥 Export PDF</button>
-                    <button class="btn btn-success" onclick="exportCSV()">📥 Export CSV</button>
                 </div>
-            </div>
-            <div id="reportContent"></div>
-        </section>
-    </main>
-</div>
-
-<!-- User Modal -->
-<div id="userModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="userModalTitle">Add User</h2>
-            <span class="close" onclick="hideModal('userModal')">&times;</span>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="hideModal('participantModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
-        <form id="userForm">
-            <input type="hidden" id="userId">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="userName2" required>
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="userEmail" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="userPassword">
-            </div>
-            <div class="form-group">
-                <label>Role</label>
-                <select id="userRole" required>
-                    <option value="ADMIN">Admin</option>
-                    <option value="EVALUATOR">Evaluator</option>
-                </select>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('userModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
     </div>
-</div>
 
-<!-- Batch Modal -->
-<div id="batchModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="batchModalTitle">Add Batch</h2>
-            <span class="close" onclick="hideModal('batchModal')">&times;</span>
+    <!-- Round Modal - FIXED -->
+    <div id="roundModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="roundModalTitle">Add Round</h2>
+                <span class="close" onclick="hideModal('roundModal')">&times;</span>
+            </div>
+            <form id="roundForm">
+                <input type="hidden" id="roundId">
+                <div class="form-group">
+                    <label for="roundModalBatch">Batch *</label>
+                    <select id="roundModalBatch" required>
+                        <option value="">Select Batch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="roundModalTechnology">Technology *</label>
+                    <select id="roundModalTechnology" required>
+                        <option value="">Select Technology</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="roundNumber">Round Number *</label>
+                    <input type="number" id="roundNumber" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="roundName">Round Name *</label>
+                    <input type="text" id="roundName" required placeholder="e.g., Technical Interview, HR Round">
+                </div>
+                <div class="form-group">
+                    <label for="roundDescription">Description</label>
+                    <textarea id="roundDescription" rows="3"
+                        placeholder="Description of this evaluation round"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('roundModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Round</button>
+                </div>
+            </form>
         </div>
-        <form id="batchForm">
-            <input type="hidden" id="batchId">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="batchName" required>
-            </div>
-            <div class="form-group">
-                <label>Start Date</label>
-                <input type="date" id="batchStartDate" required>
-            </div>
-            <div class="form-group">
-                <label>End Date</label>
-                <input type="date" id="batchEndDate" required>
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="batchDescription"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('batchModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
     </div>
-</div>
 
-<!-- Technology Modal -->
-<div id="technologyModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="technologyModalTitle">Add Technology</h2>
-            <span class="close" onclick="hideModal('technologyModal')">&times;</span>
+    <!-- Assignment Modal -->
+    <div id="assignmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="assignmentModalTitle">Assign Evaluation</h2>
+                <span class="close" onclick="hideModal('assignmentModal')">&times;</span>
+            </div>
+            <form id="assignmentForm">
+                <div class="form-group">
+                    <label for="assignParticipant">Participant *</label>
+                    <select id="assignParticipant" required>
+                        <option value="">Select Participant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assignEvaluator">Evaluator *</label>
+                    <select id="assignEvaluator" required>
+                        <option value="">Select Evaluator</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assignRound">Round *</label>
+                    <select id="assignRound" required>
+                        <option value="">Select Round</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="hideModal('assignmentModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
         </div>
-        <form id="technologyForm">
-            <input type="hidden" id="technologyId">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="technologyName" required>
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="technologyDescription"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('technologyModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
     </div>
-</div>
 
-<!-- Participant Modal -->
-<div id="participantModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="participantModalTitle">Add Participant</h2>
-            <span class="close" onclick="hideModal('participantModal')">&times;</span>
-        </div>
-        <form id="participantForm">
-            <input type="hidden" id="participantId">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="participantName" required>
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="participantEmail" required>
-            </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="text" id="participantPhone">
-            </div>
-            <div class="form-group">
-                <label>Batch</label>
-                <select id="participantBatch" required></select>
-            </div>
-            <div class="form-group">
-                <label>Technology</label>
-                <select id="participantTechnology" required></select>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('participantModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
-<!-- Round Modal -->
-<div id="roundModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Add Evaluation Round</h2>
-            <span class="close" onclick="hideModal('roundModal')">&times;</span>
-        </div>
-        <form id="roundForm">
-            <div class="form-group">
-                <label>Batch</label>
-                <select id="roundBatch" required></select>
-            </div>
-            <div class="form-group">
-                <label>Technology</label>
-                <select id="roundTechnology" required></select>
-            </div>
-            <div class="form-group">
-                <label>Round Number</label>
-                <input type="number" id="roundNumber" min="1" required>
-            </div>
-            <div class="form-group">
-                <label>Round Name</label>
-                <input type="text" id="roundName" placeholder="e.g., Technical Interview">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="roundDescription"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('roundModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Assignment Modal -->
-<div id="assignmentModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Assign Evaluation</h2>
-            <span class="close" onclick="hideModal('assignmentModal')">&times;</span>
-        </div>
-        <form id="assignmentForm">
-            <div class="form-group">
-                <label>Participant</label>
-                <select id="assignParticipant" required></select>
-            </div>
-            <div class="form-group">
-                <label>Evaluator</label>
-                <select id="assignEvaluator" required></select>
-            </div>
-            <div class="form-group">
-                <label>Round</label>
-                <select id="assignRound" required></select>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideModal('assignmentModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Assign</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
-
-<script src="/js/common.js"></script>
-<script src="/js/admin.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/admin.js"></script>
 </body>
+
 </html>
