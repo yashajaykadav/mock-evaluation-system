@@ -1042,11 +1042,20 @@ function showModal(modalId) {
     }
 }
 
+
 function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'none';
     }
+}
+
+function openModal(modalId) {
+    showModal(modalId);
+}
+
+function closeModal(modalId) {
+    hideModal(modalId);
 }
 
 // Close modal when clicking outside
@@ -1062,13 +1071,17 @@ function showNotification(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (toast) {
         toast.textContent = message;
-        toast.className = `toast ${type}`;
+        toast.className = `toast toast-${type}`;
         toast.style.display = 'block';
+        toast.style.opacity = '1';
 
         setTimeout(() => {
-            toast.style.display = 'none';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 300);
         }, 3000);
     } else {
-        console.log(`[${type}] ${message}`);
+        console.log(`[${type.toUpperCase()}] ${message}`);
     }
 }
