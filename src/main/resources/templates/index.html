@@ -39,7 +39,7 @@
       const password = document.getElementById('password').value;
 
       try {
-          const response = await fetch('/api/login', {
+          const response = await fetch('/api/auth/login', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
@@ -50,10 +50,11 @@
           const data = await response.json();
 
           if (data.success) {
+              localStorage.setItem('token', data.token);
               if (data.role === 'ADMIN') {
-                  window.location.href = '/admin/dashboard';
+                  window.location.href = '/admin-dashboard';
               } else {
-                  window.location.href = '/evaluator/dashboard';
+                  window.location.href = '/evaluator-dashboard';
               }
           } else {
               showError(data.message || 'Invalid credentials');

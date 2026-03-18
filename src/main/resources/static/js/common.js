@@ -1,15 +1,21 @@
 // Common utility functions
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'none';
 }
 
 function openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'flex';
 }
 
+// Aliases used by HTML onclick attributes
+function showModal(modalId) { openModal(modalId); }
+function hideModal(modalId) { closeModal(modalId); }
+
 // Close modal when clicking outside
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
     }
@@ -68,3 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+async function apiCall(url, options = {}) {
+    const token = localStorage.getItem('token');
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+    return fetch(url, options);
+}

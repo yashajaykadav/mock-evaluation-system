@@ -22,7 +22,7 @@ public class Evaluation {
     @JoinColumn(name = "assignment_id")
     private EvaluationAssignment assignment;
 
-    private int score;
+    private double score;
 
     @Column(length = 2000)
     private String feedback;

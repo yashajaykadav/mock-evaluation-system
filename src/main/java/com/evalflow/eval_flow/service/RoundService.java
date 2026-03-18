@@ -20,4 +20,12 @@ public class RoundService {
     public List<Round> getRounds() {
         return roundRepository.findAll();
     }
+
+    public List<Round> getRoundsByTechnology(Long technologyId) {
+        return roundRepository.findByTechnologyId(technologyId);
+    }
+
+    public void deleteRound(Long id) {
+        roundRepository.deleteById(id);
+    }
 }

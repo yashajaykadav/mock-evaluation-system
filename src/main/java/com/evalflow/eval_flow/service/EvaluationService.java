@@ -1,6 +1,5 @@
 package com.evalflow.eval_flow.service;
 
-
 import com.evalflow.eval_flow.dto.EvaluationRequest;
 import com.evalflow.eval_flow.dto.EvaluationResponse;
 import com.evalflow.eval_flow.entity.Evaluation;
@@ -25,18 +24,19 @@ public class EvaluationService {
                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
         if (!assignment.getStatus().equals("ASSIGNED")) {
-            throw new RuntimeException("Assignment is not valid");
+            throw new RuntimeException("Assignment is not valid for evaluation");
         }
 
         if (evaluationRepository.existsByAssignment(assignment)) {
-            throw new RuntimeException("Evaluation already exists");
+            throw new RuntimeException("Evaluation already submitted");
         }
 
+        // Changed: use comments instead of feedback, score threshold from 7 to 70
         Evaluation evaluation = Evaluation.builder()
                 .assignment(assignment)
                 .score(request.getScore())
-                .feedback(request.getFeedback())
-                .result(request.getScore() >= 7 ? "SELECTED" : "REJECTED")
+                .feedback(request.getComments()) // ← Changed from getFeedback() to getComments()
+                .result(request.getScore() >= 70 ? "SELECTED" : "REJECTED") // ← Changed threshold (0-100 scale)
                 .submittedAt(LocalDateTime.now())
                 .build();
 
@@ -71,5 +71,4 @@ public class EvaluationService {
     public List<Evaluation> getAll() {
         return evaluationRepository.findAll();
     }
-
 }

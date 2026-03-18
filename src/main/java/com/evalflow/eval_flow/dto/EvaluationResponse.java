@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class EvaluationResponse {
 
     private Long id;
-    private int score;
+    private double score;
     private String feedback;
     private String result;
     private LocalDateTime submittedAt;

@@ -65,7 +65,7 @@
         btnLoader.style.display = 'inline';
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -74,7 +74,8 @@
             const data = await response.json();
 
             if (data.success) {
-                window.location.href = data.role === 'ADMIN' ? '/admin/dashboard' : '/evaluator/dashboard';
+                localStorage.setItem('token', data.token);
+                window.location.href = data.role === 'ADMIN' ? '/admin-dashboard' : '/evaluator-dashboard';
             } else {
                 errorDiv.textContent = data.message || 'Invalid credentials';
                 errorDiv.style.display = 'block';

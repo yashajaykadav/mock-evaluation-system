@@ -21,6 +21,16 @@ public class TechnologyService {
         return technologyRepository.findAll();
     }
 
+    public Technology updateTechnology(Long id, Technology updated) {
+        Technology existing = technologyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Technology not found: " + id));
+        existing.setName(updated.getName());
+        if (updated.getDescription() != null) {
+            existing.setDescription(updated.getDescription());
+        }
+        return technologyRepository.save(existing);
+    }
+
     public void deleteTechnology(Long id) {
         technologyRepository.deleteById(id);
     }

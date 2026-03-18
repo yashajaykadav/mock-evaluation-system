@@ -2,13 +2,75 @@
 
 let evaluations = [];
 
+// Get token from localStorage
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+// Check authentication
+function checkAuth() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+        return false;
+    }
+    return true;
+}
+
+// API call helper with token
+async function apiCall(url, options = {}) {
+    const token = getToken();
+    
+    if (!token) {
+        window.location.href = '/login';
+        return null;
+    }
+    
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    
+    const response = await fetch(url, options);
+    
+    // Handle unauthorized responses
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return null;
+    }
+    
+    return response;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    if (!checkAuth()) return;
     loadEvaluations();
+    setupLogout();
 });
+
+// Setup logout button
+function setupLogout() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        });
+    }
+}
 
 async function loadEvaluations() {
     try {
-        const response = await fetch('/evaluator/api/evaluations');
+        const response = await apiCall('/evaluator/api/evaluations');
+        
+        if (!response) return;
+        
+        if (!response.ok) {
+            throw new Error('Failed to load evaluations');
+        }
+        
         evaluations = await response.json();
 
         updateStats();
@@ -33,6 +95,11 @@ function renderEvaluationsTable() {
     const tbody = document.querySelector('#evaluationsTable tbody');
     tbody.innerHTML = '';
 
+    if (evaluations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No evaluations assigned</td></tr>';
+        return;
+    }
+
     evaluations.forEach(evaluation => {
         const row = `
             <tr>
@@ -56,11 +123,18 @@ function renderEvaluationsTable() {
     });
 }
 
-async function showEvaluationForm(evaluationId) {
+function showEvaluationForm(evaluationId) {
     const evaluation = evaluations.find(e => e.id === evaluationId);
 
     if (!evaluation) return;
 
+    // Reset form state
+    document.getElementById('evaluationScore').disabled = false;
+    document.getElementById('evaluationComments').disabled = false;
+    const submitBtn = document.querySelector('#evaluationForm button[type="submit"]');
+    if (submitBtn) submitBtn.style.display = 'block';
+
+    // Fill form
     document.getElementById('evaluationId').value = evaluation.id;
     document.getElementById('evalParticipantName').textContent = evaluation.participant?.name || '-';
     document.getElementById('evalBatch').textContent = evaluation.participant?.batch?.name || '-';
@@ -73,7 +147,7 @@ async function showEvaluationForm(evaluationId) {
     openModal('evaluationModal');
 }
 
-async function viewEvaluation(evaluationId) {
+function viewEvaluation(evaluationId) {
     const evaluation = evaluations.find(e => e.id === evaluationId);
 
     if (!evaluation) return;
@@ -90,9 +164,18 @@ async function viewEvaluation(evaluationId) {
     document.getElementById('evaluationComments').disabled = true;
 
     const submitBtn = document.querySelector('#evaluationForm button[type="submit"]');
-    submitBtn.style.display = 'none';
+    if (submitBtn) submitBtn.style.display = 'none';
 
     openModal('evaluationModal');
+}
+
+// Reset form when modal closes
+function resetEvaluationForm() {
+    document.getElementById('evaluationScore').disabled = false;
+    document.getElementById('evaluationComments').disabled = false;
+    const submitBtn = document.querySelector('#evaluationForm button[type="submit"]');
+    if (submitBtn) submitBtn.style.display = 'block';
+    document.getElementById('evaluationForm').reset();
 }
 
 document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
@@ -102,13 +185,19 @@ document.getElementById('evaluationForm').addEventListener('submit', async (e) =
     const score = parseFloat(document.getElementById('evaluationScore').value);
     const comments = document.getElementById('evaluationComments').value;
 
+    // Validation
+    if (isNaN(score)) {
+        showNotification('Please enter a valid score', 'error');
+        return;
+    }
+
     if (score < 0 || score > 100) {
         showNotification('Score must be between 0 and 100', 'error');
         return;
     }
 
     try {
-        const response = await fetch(`/evaluator/api/evaluations/${evaluationId}/submit`, {
+        const response = await apiCall(`/evaluator/api/evaluations/${evaluationId}/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -116,21 +205,26 @@ document.getElementById('evaluationForm').addEventListener('submit', async (e) =
             body: JSON.stringify({ score, comments })
         });
 
+        if (!response) return;
+
         if (response.ok) {
             showNotification('Evaluation submitted successfully');
             closeModal('evaluationModal');
+            resetEvaluationForm();
             loadEvaluations();
-
-            // Reset form
-            document.getElementById('evaluationScore').disabled = false;
-            document.getElementById('evaluationComments').disabled = false;
-            document.querySelector('#evaluationForm button[type="submit"]').style.display = 'block';
         } else {
             const error = await response.json();
-            showNotification(error.error || 'Error submitting evaluation', 'error');
+            showNotification(error.error || error.message || 'Error submitting evaluation', 'error');
         }
     } catch (error) {
         console.error('Error submitting evaluation:', error);
         showNotification('Error submitting evaluation', 'error');
+    }
+});
+
+// Close modal event - reset form
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal') || e.target.classList.contains('close')) {
+        resetEvaluationForm();
     }
 });
