@@ -2,7 +2,6 @@ package com.evalflow.eval_flow.service;
 
 import com.evalflow.eval_flow.entity.Participant;
 import com.evalflow.eval_flow.repository.ParticipantRepository;
-import com.evalflow.eval_flow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
