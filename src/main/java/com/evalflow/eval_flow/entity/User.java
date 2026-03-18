@@ -2,7 +2,6 @@ package com.evalflow.eval_flow.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
 @Table(name = "users")
 @Getter
@@ -18,12 +17,11 @@ public class User {
 
     private String name;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
 }
